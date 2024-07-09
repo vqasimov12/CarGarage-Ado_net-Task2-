@@ -3,8 +3,8 @@ using System.Windows;
 namespace CarGarage;
 public partial class AddWindow : Window
 {
-    private string model;
-    private string marka;
+    private string model = "";
+    private string marka = "";
     public string ConnectionString;
     public string Marka { get => marka; set => marka = value; }
     public string Model { get => model; set => model = value; }
@@ -16,12 +16,12 @@ public partial class AddWindow : Window
 
     private void Add_Button_Click(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show(Marka + " " + Model);
-
         using (SqlConnection connection = new(ConnectionString))
         {
             try
             {
+                if (Marka == "" || Model == "")
+                    throw new("Marka and model should be entered");
                 connection.Open();
                 string query = @"INSERT INTO Car_Table (Marka, Model)
                      VALUES (@param1, @param2)";
@@ -32,7 +32,7 @@ public partial class AddWindow : Window
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error: " + ex.Message);
+                MessageBox.Show($"Error: {ex.Message}","Error",MessageBoxButton.OK,MessageBoxImage.Error);
             }
             Close();
         }

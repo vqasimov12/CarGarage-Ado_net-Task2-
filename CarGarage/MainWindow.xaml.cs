@@ -9,9 +9,9 @@ namespace CarGarage;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    public string Search_text { get => search_text; set { search_text = value; OnPropertyChanged(); } }
     private ObservableCollection<Car> cars;
-    private string search_text;
+    private string search_text = "";
+    public string Search_text { get => search_text; set { search_text = value; OnPropertyChanged(); } }
 
     public ObservableCollection<Car> Cars { get => cars; set { cars = value; OnPropertyChanged(); } }
     private readonly IConfiguration _configuration;
@@ -31,27 +31,28 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
-        using (SqlConnection connection = new(_configuration.GetConnectionString("DbConnection")))
-        {
-            try
+        if (search_text != "")
+            using (SqlConnection connection = new(_configuration.GetConnectionString("DbConnection")))
             {
-                connection.Open();
-                SqlCommand cmd = new();
-                cmd.Parameters.Add("@param", System.Data.SqlDbType.NVarChar).Value = Search_text;
-                string query;
-                if (MarkaRadioButton.IsChecked == true)
-                    query = "SELECT * FROM Car_table WHERE Marka LIKE @param";
-                else
-                    query = "SELECT * FROM Car_table WHERE Model LIKE @param";
-                cmd.CommandText=query;
-                cmd.Connection = connection;
-                RefreshDataSource(query, cmd);
+                try
+                {
+                    connection.Open();
+                    SqlCommand cmd = new();
+                    cmd.Parameters.Add("@param", System.Data.SqlDbType.NVarChar).Value = Search_text;
+                    string query;
+                    if (MarkaRadioButton.IsChecked == true)
+                        query = "SELECT * FROM Car_table WHERE Marka LIKE @param";
+                    else
+                        query = "SELECT * FROM Car_table WHERE Model LIKE @param";
+                    cmd.CommandText = query;
+                    cmd.Connection = connection;
+                    RefreshDataSource(query, cmd);
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show($"Error: {exception.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
-            catch (Exception exception)
-            {
-                MessageBox.Show(exception.Message);
-            }
-        }
     }
 
     private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -68,7 +69,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         var textbox = sender as TextBox;
         if (textbox?.Text.Length == 0)
-            RefreshDataSource("SELECT * FROM Car_Table",null);
+            RefreshDataSource("SELECT * FROM Car_Table", null);
     }
     void RefreshDataSource(string query, SqlCommand? cmd)
     {
@@ -90,7 +91,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                MessageBox.Show($"Error: {e.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
